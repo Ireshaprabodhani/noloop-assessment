@@ -1,55 +1,65 @@
 "use client";
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import type { TaskCounts } from "@/hooks/use-tasks";
 import { STATUS_LABELS, TASK_STATUSES, type TaskStatus } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
-// Radix Select doesn't allow an empty string as an item value.
-const ALL = "ALL";
+const FILTERS: { value: TaskStatus | undefined; label: string }[] = [
+  { value: undefined, label: "All" },
+  ...TASK_STATUSES.map((value) => ({ value, label: STATUS_LABELS[value] })),
+];
 
 interface TaskToolbarProps {
   status: TaskStatus | undefined;
   onStatusChange: (status: TaskStatus | undefined) => void;
-  /** Number of tasks currently shown, or null while loading. */
-  count: number | null;
+  counts: TaskCounts | null;
 }
 
-export function TaskToolbar({ status, onStatusChange, count }: TaskToolbarProps) {
+/** Segmented status filter with a count per status. */
+export function TaskToolbar({
+  status,
+  onStatusChange,
+  counts,
+}: TaskToolbarProps) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <div className="flex items-center gap-2">
-        <span className="text-muted-foreground text-sm" id="status-filter">
-          Status
-        </span>
-        <Select
-          value={status ?? ALL}
-          onValueChange={(value) =>
-            onStatusChange(value === ALL ? undefined : (value as TaskStatus))
-          }
-        >
-          <SelectTrigger className="w-40" aria-labelledby="status-filter">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL}>All statuses</SelectItem>
-            {TASK_STATUSES.map((value) => (
-              <SelectItem key={value} value={value}>
-                {STATUS_LABELS[value]}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      {count !== null && (
-        <p className="text-muted-foreground text-sm">
-          {count} {count === 1 ? "task" : "tasks"}
-        </p>
-      )}
+    <div
+      role="tablist"
+      aria-label="Filter tasks by status"
+      className="bg-muted inline-flex w-full gap-1 overflow-x-auto rounded-lg p-1 sm:w-auto"
+    >
+      {FILTERS.map(({ value, label }) => {
+        const active = status === value;
+        const count = counts?.[value ?? "ALL"];
+        return (
+          <button
+            key={label}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            onClick={() => onStatusChange(value)}
+            className={cn(
+              "focus-visible:ring-ring/50 inline-flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:ring-[3px] sm:flex-none",
+              active
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {label}
+            {count !== undefined && (
+              <span
+                className={cn(
+                  "rounded-full px-1.5 text-xs tabular-nums",
+                  active
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-background",
+                )}
+              >
+                {count}
+              </span>
+            )}
+          </button>
+        );
+      })}
     </div>
   );
 }

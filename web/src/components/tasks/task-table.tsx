@@ -1,6 +1,13 @@
 "use client";
 
-import { ArrowDown, ArrowUp, ArrowUpDown, Pencil, Trash2 } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  CalendarDays,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,7 +19,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatCreatedAt, formatDueDate, isOverdue } from "@/lib/format";
+import {
+  daysUntil,
+  formatCreatedAt,
+  formatDueDate,
+  relativeDueLabel,
+} from "@/lib/format";
 import type { SortOrder, Task } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { TaskStatusBadge } from "./task-status-badge";
@@ -48,67 +60,71 @@ export function TaskTable({
         : ArrowUpDown;
 
   return (
-    <div className="rounded-lg border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-full pl-4">Title</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead
-              aria-sort={
-                dueDateOrder === "asc"
-                  ? "ascending"
-                  : dueDateOrder === "desc"
-                    ? "descending"
-                    : "none"
-              }
+    <Table>
+      <TableHeader className="bg-muted/50">
+        <TableRow className="hover:bg-transparent">
+          <TableHead className="w-full pl-4 text-xs uppercase tracking-wide text-muted-foreground">
+            Task
+          </TableHead>
+          <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">
+            Status
+          </TableHead>
+          <TableHead
+            aria-sort={
+              dueDateOrder === "asc"
+                ? "ascending"
+                : dueDateOrder === "desc"
+                  ? "descending"
+                  : "none"
+            }
+          >
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground -ml-3 text-xs uppercase tracking-wide"
+              onClick={onToggleDueDateSort}
             >
-              <Button
-                variant="ghost"
-                size="sm"
-                className="-ml-3"
-                onClick={onToggleDueDateSort}
-              >
-                Due date
-                <SortIcon className={cn(!dueDateOrder && "opacity-50")} />
-              </Button>
-            </TableHead>
-            <TableHead>Created</TableHead>
-            <TableHead className="pr-4 text-right">
-              <span className="sr-only">Actions</span>
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {loading ? (
-            Array.from({ length: SKELETON_ROWS }, (_, i) => (
-              <TableRow key={i}>
-                {Array.from({ length: COLUMN_COUNT }, (_, j) => (
-                  <TableCell key={j} className="py-3 first:pl-4 last:pr-4">
-                    <Skeleton className="h-5 w-full min-w-16" />
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))
-          ) : tasks.length === 0 ? (
-            <TableRow className="hover:bg-transparent">
-              <TableCell colSpan={COLUMN_COUNT} className="py-12">
-                {emptyState}
-              </TableCell>
+              Due date
+              <SortIcon className={cn(!dueDateOrder && "opacity-50")} />
+            </Button>
+          </TableHead>
+          <TableHead className="text-xs uppercase tracking-wide text-muted-foreground">
+            Created
+          </TableHead>
+          <TableHead className="pr-4 text-right">
+            <span className="sr-only">Actions</span>
+          </TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {loading ? (
+          Array.from({ length: SKELETON_ROWS }, (_, i) => (
+            <TableRow key={i}>
+              {Array.from({ length: COLUMN_COUNT }, (_, j) => (
+                <TableCell key={j} className="py-3 first:pl-4 last:pr-4">
+                  <Skeleton className="h-5 w-full min-w-16" />
+                </TableCell>
+              ))}
             </TableRow>
-          ) : (
-            tasks.map((task) => (
-              <TaskRow
-                key={task.id}
-                task={task}
-                onEdit={onEdit}
-                onDelete={onDelete}
-              />
-            ))
-          )}
-        </TableBody>
-      </Table>
-    </div>
+          ))
+        ) : tasks.length === 0 ? (
+          <TableRow className="hover:bg-transparent">
+            <TableCell colSpan={COLUMN_COUNT} className="py-16">
+              {emptyState}
+            </TableCell>
+          </TableRow>
+        ) : (
+          tasks.map((task) => (
+            <TaskRow
+              key={task.id}
+              task={task}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
+          ))
+        )}
+      </TableBody>
+    </Table>
   );
 }
 
@@ -121,11 +137,14 @@ function TaskRow({
   onEdit: (task: Task) => void;
   onDelete: (task: Task) => void;
 }) {
-  const overdue = task.status !== "DONE" && isOverdue(task.dueDate);
+  const days = task.dueDate ? daysUntil(task.dueDate) : null;
+  const pending = task.status !== "DONE";
+  const overdue = pending && days !== null && days < 0;
+  const dueSoon = pending && days !== null && days >= 0 && days <= 2;
 
   return (
     <TableRow>
-      <TableCell className="max-w-0 py-3 pl-4">
+      <TableCell className="max-w-0 py-4 pl-4">
         <p
           className={cn(
             "truncate font-medium",
@@ -149,14 +168,32 @@ function TaskRow({
       </TableCell>
       <TableCell>
         {task.dueDate ? (
-          <span
-            className={cn(overdue && "text-destructive font-medium")}
-            title={overdue ? "Overdue" : undefined}
-          >
-            {formatDueDate(task.dueDate)}
-          </span>
+          <div className="flex items-start gap-2">
+            <CalendarDays
+              className={cn(
+                "text-muted-foreground mt-0.5 size-4",
+                overdue && "text-destructive",
+                dueSoon && "text-amber-600",
+              )}
+              aria-hidden
+            />
+            <div className="leading-tight">
+              <p>{formatDueDate(task.dueDate)}</p>
+              {pending && (
+                <p
+                  className={cn(
+                    "text-muted-foreground text-xs",
+                    overdue && "text-destructive font-medium",
+                    dueSoon && "font-medium text-amber-600",
+                  )}
+                >
+                  {relativeDueLabel(task.dueDate)}
+                </p>
+              )}
+            </div>
+          </div>
         ) : (
-          <span className="text-muted-foreground">—</span>
+          <span className="text-muted-foreground text-xs">No due date</span>
         )}
       </TableCell>
       <TableCell className="text-muted-foreground">

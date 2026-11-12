@@ -3,7 +3,10 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { STATUS_LABELS, type TaskStatus } from "@/lib/types";
 
-const STATUS_STYLES: Record<TaskStatus, { className: string; icon: typeof Circle }> = {
+const STATUS_STYLES: Record<
+  TaskStatus,
+  { className: string; icon: typeof Circle }
+> = {
   TODO: {
     className: "border-slate-200 bg-slate-100 text-slate-700",
     icon: Circle,
