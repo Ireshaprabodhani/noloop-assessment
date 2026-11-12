@@ -162,7 +162,6 @@ web/                      Next.js (App Router) + shadcn/ui
 - **Tools:** Claude Code (Anthropic's Claude, in VS Code) as a pair programmer.
 - **What it did:** proposed the plan and project structure, then generated most of the code (API, DTOs, tests, React components) and a first draft of this README, committing in small steps.
 - **What I changed or reviewed:**
-  - Chose the scope and trade-offs myself (in-memory storage, all three bonus features).
+  - Chose the scope and trade-offs myself (in-memory storage, plus the status filter and due-date sorting bonus features; I dropped the optional Docker setup).
   - Reviewed the validation edge cases and asked for them to be covered: PATCH can clear `description`/`dueDate` with `null` but not `title`, unknown fields are rejected, and a malformed id returns 400 while a missing one returns 404.
   - Checked the UI behaviour: the dialogs stay open and show the error if a request fails, due dates are parsed as local dates (avoiding an off-by-one day in some time zones), and tasks without a due date are listed last.
-  - _TODO (author): add anything else you changed by hand._
