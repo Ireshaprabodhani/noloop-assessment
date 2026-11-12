@@ -1,3 +1,5 @@
+import { TaskManager } from "@/components/tasks/task-manager";
+
 export default function Home() {
-  return <main className="container mx-auto p-8">Task Manager</main>;
+  return <TaskManager />;
 }
