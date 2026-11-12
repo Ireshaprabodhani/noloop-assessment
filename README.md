@@ -7,7 +7,6 @@ A small task manager with a **NestJS** REST API (`/api`) and a **Next.js + shadc
 - Filter by status and sort by due date (both handled by the API)
 - Input validation with DTOs + `class-validator` (400 on bad input, 404 for unknown tasks)
 - Loading skeletons, error state with retry, confirmation before delete, toast on success
-- Docker Compose setup to run both apps with one command
 
 ## Prerequisites
 
@@ -15,7 +14,6 @@ A small task manager with a **NestJS** REST API (`/api`) and a **Next.js + shadc
 | ------- | -------------------------------------- |
 | Node.js | **20.x or 22.x** (tested on 22.20)     |
 | npm     | **10.x** (comes with Node 20/22)       |
-| Docker  | Optional, only for the Docker option   |
 
 No database is needed: tasks are stored **in memory**, so they reset when the API restarts.
 
@@ -55,16 +53,6 @@ Open **http://localhost:3000**.
 cd api && npm run build && npm run start:prod
 cd web && npm run build && npm start
 ```
-
-## Run with Docker (optional)
-
-From the repository root:
-
-```bash
-docker compose up --build
-```
-
-Then open **http://localhost:3000**. Stop with `Ctrl+C`, then run `docker compose down`.
 
 ## Environment variables
 
@@ -172,7 +160,7 @@ web/                      Next.js (App Router) + shadcn/ui
 ## How I used AI
 
 - **Tools:** Claude Code (Anthropic's Claude, in VS Code) as a pair programmer.
-- **What it did:** proposed the plan and project structure, then generated most of the code (API, DTOs, tests, React components, Docker setup) and a first draft of this README, committing in small steps.
+- **What it did:** proposed the plan and project structure, then generated most of the code (API, DTOs, tests, React components) and a first draft of this README, committing in small steps.
 - **What I changed or reviewed:**
   - Chose the scope and trade-offs myself (in-memory storage, all three bonus features).
   - Reviewed the validation edge cases and asked for them to be covered: PATCH can clear `description`/`dueDate` with `null` but not `title`, unknown fields are rejected, and a malformed id returns 400 while a missing one returns 404.
