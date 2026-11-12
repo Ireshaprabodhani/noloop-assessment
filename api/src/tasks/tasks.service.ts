@@ -70,7 +70,8 @@ function emptyToNull(value: string | null | undefined): string | null {
 
 function compareByCreatedAt(order: 'asc' | 'desc') {
   const direction = order === 'asc' ? 1 : -1;
-  return (a: Task, b: Task) => a.createdAt.localeCompare(b.createdAt) * direction;
+  return (a: Task, b: Task) =>
+    a.createdAt.localeCompare(b.createdAt) * direction;
 }
 
 // Tasks without a due date always go last, regardless of direction.

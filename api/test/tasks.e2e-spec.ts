@@ -76,7 +76,9 @@ describe('Tasks API (e2e)', () => {
         .send(body)
         .expect(400);
 
-      expect(res.body.message).toEqual(expect.any(Array));
+      expect((res.body as { message: unknown }).message).toEqual(
+        expect.any(Array),
+      );
     });
   });
 
@@ -210,9 +212,7 @@ describe('Tasks API (e2e)', () => {
       await request(app.getHttpServer())
         .delete(`/tasks/${task.id}`)
         .expect(204);
-      await request(app.getHttpServer())
-        .get(`/tasks/${task.id}`)
-        .expect(404);
+      await request(app.getHttpServer()).get(`/tasks/${task.id}`).expect(404);
     });
 
     it('returns 404 for an unknown id', async () => {
